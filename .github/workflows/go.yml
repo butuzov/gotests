@@ -1,13 +1,12 @@
 name: Go
 
 on:
-  push:
-    branches: [ master, develop ]
+  push: 
+    branches: [ master, develop, forked ]  
   pull_request:
     branches: [ master, develop ]
 
 jobs:
-
   test:
     name: Test
     runs-on: ubuntu-latest
