@@ -882,7 +882,7 @@ func TestGenerateTests(t *testing.T) {
 			want: mustReadAndFormatGoFile(t, "testdata/named/named_off_subtests_on_template_testify.go"),
 		},
 		{
-			name: "OK_named/off,subtests/on,parallel/on",
+			name: "OK_named=off,subtests=on,parallel=on",
 			args: args{
 				srcPath:  "testdata/test038.go",
 				subtests: true,
@@ -922,7 +922,7 @@ func TestGenerateTests(t *testing.T) {
 			want: mustReadAndFormatGoFile(t, "testdata/named/named_on_subtests_on_parallel_on_template_testify.go"),
 		},
 		{
-			name: "OK_named/off,subtests=on,parallel=on,template=testify",
+			name: "OK_named=off,subtests=on,parallel=on,template=testify",
 			args: args{
 				srcPath:  "testdata/test038.go",
 				subtests: true,
