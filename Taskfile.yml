@@ -1,0 +1,105 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GIT_COMMIT:
+    sh: git log -n 1 --format=%h
+
+  GO_PACKAGES:
+    sh: go list ./... | grep -vE "(gotests/gotests|.*data|templates)" | tr -s '\n' ',' | sed 's/.\{1\}$//'
+
+
+tasks:
+  default:
+    cmds:
+    - task: generate
+    - task: compile
+
+
+  compile:
+    sources:
+    - "./**/*.go"
+    cmds:
+    - task: build
+    - task: try
+    method: timestamp
+
+  try:
+    cmds:
+    - touch testdata/named/named_.go
+    - rm testdata/named/named_*
+
+
+    # - ./bin/gotests -all -named -parallel  testdata/test038.go > testdata/named/named_on_subtests_on_parallel_on.go
+    # - ./bin/gotests -all -named  testdata/test038.go > testdata/named/named_on_subtests_on.go
+    # - ./bin/gotests -all -named -nosubtests  testdata/test038.go > testdata/named/named_on_subtests_off.go
+    # - ./bin/gotests -all -named -nosubtests  testdata/test038.go > testdata/named/named_on_subtests_off.go
+    # - ./bin/gotests -all -parallel  testdata/test038.go > testdata/named/named_off_subtests_on_parallel_on.go
+    # - ./bin/gotests -all -template testify  testdata/test038.go > testdata/named/named_off_subtests_on_template_testify.go
+    # - ./bin/gotests -all  testdata/test038.go > testdata/named/named_off_subtests_on.go
+    # - ./bin/gotests -all -nosubtests testdata/test038.go > testdata/named/named_off_subtests_off.go
+
+
+    # - ./bin/gotests -all -named -template testify testdata/test038.go > testdata/named/named_on_subtests_on_template_testify.go
+    # - ./bin/gotests -all -named -nosubtests -template testify  testdata/test038.go > testdata/named/named_on_subtests_off_template_testify.go
+    # - ./bin/gotests -all -named -nosubtests -template testify testdata/test038.go > testdata/named/named_on_subtests_off_template_testify.go
+    # - ./bin/gotests -all -parallel -template testify  testdata/test038.go > testdata/named/named_off_subtests_on_parallel_on_template_testify.go
+    # - ./bin/gotests -all -named -parallel -template testify testdata/test038.go > testdata/named/named_on_subtests_on_parallel_on_template_testify.go
+    # - ./bin/gotests -all -nosubtests -template testify gotests/testdata/test038.go > testdata/named/named_off_subtests_off_template_testify.go
+    # - ./bin/gotests -all -nosubtests -template testify testdata/test038.go > testdata/named/named_off_subtests_off_template_testify.go
+
+  build:
+    desc: Build gotest
+    cmds:
+      - go build -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" -o ./bin/gotests ./gotests
+      - sha1sum ./bin/gotests
+
+  install:
+    desc: Installs Task
+    cmds:
+      - go install -v -ldflags="-w -s -X main.version={{.GIT_COMMIT}}" ./gotests
+
+  mod:
+    desc: Downloads and tidy Go modules
+    cmds:
+      - go mod download
+      - go mod tidy
+
+  deps:
+    desc: Downloads CLI dependencies
+    cmds:
+      - task: go-get
+        vars: {REPO: github.com/mjibson/esc}
+
+  tests:
+    desc: Runs test suite
+    sources:
+    - ./**/*.go
+    cmds:
+    - go test -v $(go list ./...)
+    silent: true
+    method: timestamp
+
+  go-get: go get -u {{.REPO}}
+
+  packages:
+    cmds:
+      - echo '{{.GO_PACKAGES}}'
+    silent: true
+
+  coverage:
+    cmds:
+    - go test -v -covermode=count -coverpkg={{catLines .GO_PACKAGES}} -test.coverprofile coverage.cov
+
+  generate:
+    preconditions:
+    - task: deps
+    sources:
+    - ./**/*.tmpl
+    cmds:
+    - go generate github.com/cweill/gotests/...
+    generates:
+    - templates/tmpl.go
+    - internal/render/bindata/esc.go
+
