@@ -2,7 +2,7 @@ name: Go
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ develop, forked ]
   pull_request:
     branches: [ develop ]
 
@@ -41,12 +41,12 @@ jobs:
 
     - name: Test
       run: go test ./...
-      
+
     - name: Get Coverage Report
       run: |
         go test -c -covermode=count -coverpkg=github.com/cweill/gotests,github.com/cweill/gotests/internal/input,github.com/cweill/gotests/internal/render,github.com/cweill/gotests/internal/goparser,github.com/cweill/gotests/internal/output,github.com/cweill/gotests/internal/models
         ./gotests.test -test.coverprofile coverage.cov
-        
+
     - name: Send Coverage Report
       run: $GOPATH/bin/goveralls -coverprofile=coverage.cov -service=github
       env:
